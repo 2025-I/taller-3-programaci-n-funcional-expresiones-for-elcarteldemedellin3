@@ -119,7 +119,7 @@ class definirManiobrasTest extends AnyFunSuite {
   }
 
   //Pruebas Medianas
-  test("Prueba 1: Mover los primeros 100 vagones al final") {
+  test("Prueba M1: Mover los primeros 100 vagones al final") {
     val t1 = (1 to 500).toList
     val t2 = (101 to 500).toList ++ (1 to 100) // Mover los primeros 100 vagones al final
     val expected = (1 to 100).flatMap(i => List(objdefinirManiobras.Uno(i), objdefinirManiobras.Uno(-i)))
@@ -127,7 +127,7 @@ class definirManiobrasTest extends AnyFunSuite {
     assert(result == expected)
   }
 
-  test("Prueba 2: Mover vagones del medio a la estación uno") {
+  test("Prueba M2: Mover vagones del medio a la estación uno") {
     val t1 = (1 to 500).toList
     val t2 = (1 to 250).toList ++ (251 to 500).toList // Mover los vagones del medio al final
     val expected = (251 to 500).flatMap(i => List(objdefinirManiobras.Uno(i), objdefinirManiobras.Uno(-i)))
@@ -135,7 +135,7 @@ class definirManiobrasTest extends AnyFunSuite {
     assert(result == expected)
   }
 
-  test("Prueba 3: Mover los últimos 50 vagones al principio") {
+  test("Prueba M3: Mover los últimos 50 vagones al principio") {
     val t1 = (1 to 500).toList
     val t2 = (451 to 500).toList ++ (1 to 450) // Mover los últimos 50 vagones al principio
     val expected = (451 to 500).flatMap(i => List(objdefinirManiobras.Uno(i), objdefinirManiobras.Uno(-i)))
@@ -143,7 +143,7 @@ class definirManiobrasTest extends AnyFunSuite {
     assert(result == expected)
   }
 
-  test("Prueba 4: Mover vagones en un patrón alterno") {
+  test("Prueba M4: Mover vagones en un patrón alterno") {
     val t1 = (1 to 500).toList
     val t2 = (1 to 500).toList.reverse // Invertir el tren
     val expected = (1 to 500).flatMap(i => List(objdefinirManiobras.Uno(i), objdefinirManiobras.Dos(-i)))
@@ -151,7 +151,7 @@ class definirManiobrasTest extends AnyFunSuite {
     assert(result == expected)
   }
 
-  test("Prueba 5: Mover vagones de forma aleatoria") {
+  test("Prueba M5: Mover vagones de forma aleatoria") {
     val t1 = (1 to 500).toList
     val t2 = List(100, 200, 300, 400, 500) ++ (1 to 99) ++ (101 to 199) ++ (201 to 299) ++ (301 to 399) ++ (401 to 499) // Mover vagones en un orden específico
     val expected = List(
@@ -162,7 +162,7 @@ class definirManiobrasTest extends AnyFunSuite {
     assert(result == expected)
   }
   //Pruebas Grandes
-  test("Prueba 1: Revertir tren de 1000 vagones") {
+  test("Prueba G1: Revertir tren de 1000 vagones") {
     val t1 = (1 to 1000).toList
     val t2 = t1.reverse
     val expected = (1 to 1000).toList.flatMap { i =>
@@ -172,7 +172,7 @@ class definirManiobrasTest extends AnyFunSuite {
     assert(result == expected)
   }
 
-  test("Prueba 2: Mover los primeros 250 vagones al final") {
+  test("Prueba G2: Mover los primeros 250 vagones al final") {
     val t1 = (1 to 1000).toList
     val t2 = (251 to 1000).toList ++ (1 to 250) // Mover los primeros 250 vagones al final
     val expected = (1 to 250).flatMap(i => List(objdefinirManiobras.Uno(i), objdefinirManiobras.Uno(-i)))
@@ -180,7 +180,7 @@ class definirManiobrasTest extends AnyFunSuite {
     assert(result == expected)
   }
 
-  test("Prueba 3: Mover los vagones en un patrón alterno") {
+  test("Prueba G3: Mover los vagones en un patrón alterno") {
     val t1 = (1 to 1000).toList
     val t2 = (1 to 1000).toList.reverse // Invertir el tren
     val expected = (1 to 1000).flatMap(i => List(objdefinirManiobras.Uno(i), objdefinirManiobras.Dos(-i)))
@@ -188,7 +188,7 @@ class definirManiobrasTest extends AnyFunSuite {
     assert(result == expected)
   }
 
-  test("Prueba 4: Mover los últimos 100 vagones al principio") {
+  test("Prueba G4: Mover los últimos 100 vagones al principio") {
     val t1 = (1 to 1000).toList
     val t2 = (901 to 1000).toList ++ (1 to 900) // Mover los últimos 100 vagones al principio
     val expected = (901 to 1000).flatMap(i => List(objdefinirManiobras.Uno(i), objdefinirManiobras.Uno(-i)))
@@ -196,7 +196,7 @@ class definirManiobrasTest extends AnyFunSuite {
     assert(result == expected)
   }
 
-  test("Prueba 5: Mover vagones en un orden específico") {
+  test("Prueba G5: Mover vagones en un orden específico") {
     val t1 = (1 to 1000).toList
     val t2 = List(500, 600, 700, 800, 900) ++ (1 to 499) ++ (501 to 599) ++ (601 to 699) ++ (701 to 799) ++ (801 to 899) ++ (901 to 1000) // Mover vagones en un orden específico
     val expected = List(
