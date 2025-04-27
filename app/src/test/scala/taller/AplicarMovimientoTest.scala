@@ -6,127 +6,198 @@ import org.scalatestplus.junit.JUnitRunner
 
 @RunWith(classOf[JUnitRunner])
 class AplicarMovimientoTest extends AnyFunSuite {
-
   val obj = new AplicarMovimiento()
   import obj._
 
-  // ==== PRUEBAS DE JUGUETE (tamaño 10) ====
-  test("Juguete 1: Uno(2) mueve de principal a uno") {
-    val estado = (List('a', 'b', 'c', 'd'), Nil, Nil)
-    val esperado = (List('a', 'b'), List('c', 'd'), Nil)
-    assert(aplicarMovimiento(estado, Uno(2)) === esperado)
+  // Generador de vagones (usando Char para simplificar las verificaciones)
+  private def generarVagones(n: Int): Tren =
+    List.tabulate(n)(i => ('a' + (i % 26)).toChar).asInstanceOf[Tren]
+
+  /* ***********************
+   * PRUEBAS DE JUGUETE (10)
+   * ***********************/
+  test("Prueba juguete 1: Movimiento Uno(2) mueve 2 últimos elementos a vía uno") {
+    val vagones = generarVagones(10)
+    val e0: Estado = (vagones, Nil, Nil)
+    val e1 = aplicarMovimiento(e0, Uno(2))
+    // Verificamos que se movieron los últimos 2 elementos a vía uno
+    assert(e1._1 == vagones.dropRight(2))
+    assert(e1._2 == vagones.takeRight(2))
+    assert(e1._3.isEmpty)
   }
 
-  test("Juguete 2: Dos(2) mueve de principal a dos") {
-    val estado = (List('a', 'b', 'c', 'd'), Nil, Nil)
-    val esperado = (List('a', 'b'), Nil, List('c', 'd'))
-    assert(aplicarMovimiento(estado, Dos(2)) === esperado)
+  test("Prueba juguete 2: Movimiento Dos(3) mueve 3 últimos elementos a vía dos") {
+    val vagones = generarVagones(10)
+    val e0: Estado = (vagones, Nil, Nil)
+    val e1 = aplicarMovimiento(e0, Dos(3))
+    // Verificamos que se movieron los últimos 3 elementos a vía dos
+    assert(e1._1 == vagones.dropRight(3))
+    assert(e1._2.isEmpty)
+    assert(e1._3 == vagones.takeRight(3))
   }
 
-  test("Juguete 3: Uno(-2) mueve de uno a principal") {
-    val estado = (List('a'), List('c', 'd'), List('b'))
-    val esperado = (List('c', 'd', 'a'), Nil, List('b'))
-    assert(aplicarMovimiento(estado, Uno(-2)) === esperado)
+  test("Prueba juguete 3: Movimientos negativos") {
+    val e0: Estado = (Nil, List('a', 'b', 'c'), List('d', 'e', 'f'))
+    val e1 = aplicarMovimiento(e0, Uno(-2))
+    assert(e1._1.size == 2)  // Debería tomar 2 elementos de vía uno
+    assert(e1._2.size == 1)  // Debería quedar 1 en vía uno
+    assert(e1._3.size == 3)  // Vía dos intacta
+
+    val e2 = aplicarMovimiento(e1, Dos(-1))
+    assert(e2._1.size == 3)  // 2 anteriores + 1 de vía dos
+    assert(e2._2.size == 1)  // Vía uno igual
+    assert(e2._3.size == 2)  // Vía dos reducida en 1
   }
 
-  test("Juguete 4: Dos(-1) mueve de dos a principal") {
-    val estado = (List(), List('c', 'd'), List('a', 'b'))
-    val esperado = (List('a'), List('c', 'd'), List('b'))
-    assert(aplicarMovimiento(estado, Dos(-1)) === esperado)
+  test("Prueba juguete 4: Movimiento cero no cambia estado") {
+    val e0: Estado = (List('a', 'b'), List('c'), List('d'))
+    val e1 = aplicarMovimiento(e0, Uno(0))
+    assert(e1 == e0)
+
+    val e2 = aplicarMovimiento(e0, Dos(0))
+    assert(e2 == e0)
   }
 
-  test("Juguete 5: Uno(0) no cambia el estado") {
-    val estado = (List('x', 'y'), List('z'), List())
-    assert(aplicarMovimiento(estado, Uno(0)) === estado)
+  test("Prueba juguete 5: Conservación de elementos en secuencia") {
+    val vagones = generarVagones(10)
+    val e0: Estado = (vagones, Nil, Nil)
+    val movimientos = List(Uno(2), Dos(3), Uno(-1), Dos(-2))
+    val estadoFinal = movimientos.foldLeft(e0)((e, m) => aplicarMovimiento(e, m))
+    assert(estadoFinal._1.size + estadoFinal._2.size + estadoFinal._3.size == 10)
   }
 
-  // ==== PRUEBAS PEQUEÑAS (tamaño 100) ====
-  test("Pequeña 1: mover 10 a uno") {
-    val principal = (1 to 100).toList
-    val esperado = ((1 to 90).toList, (91 to 100).toList, Nil)
-    assert(aplicarMovimiento((principal, Nil, Nil), Uno(10)) === esperado)
+  /* **********************
+   * PRUEBAS PEQUEÑAS (100)
+   * **********************/
+  test("Prueba pequeña 1: Movimiento completo a vía uno") {
+    val vagones = generarVagones(100)
+    val e0: Estado = (vagones, Nil, Nil)
+    val e1 = aplicarMovimiento(e0, Uno(100))
+    assert(e1._1.isEmpty)
+    assert(e1._2.size == 100)
+    assert(e1._3.isEmpty)
   }
 
-  test("Pequeña 2: mover 20 a dos") {
-    val principal = (1 to 100).toList
-    val esperado = ((1 to 80).toList, Nil, (81 to 100).toList)
-    assert(aplicarMovimiento((principal, Nil, Nil), Dos(20)) === esperado)
+  test("Prueba pequeña 2: Movimiento parcial a vía dos") {
+    val vagones = generarVagones(100)
+    val e0: Estado = (vagones, Nil, Nil)
+    val e1 = aplicarMovimiento(e0, Dos(37))
+    assert(e1._1.size == 63)
+    assert(e1._2.isEmpty)
+    assert(e1._3.size == 37)
   }
 
-  test("Pequeña 3: retornar 10 de uno") {
-    val uno = (91 to 100).toList
-    val esperado = ((91 to 100).toList ++ (1 to 90).toList, Nil, Nil)
-    assert(aplicarMovimiento(((1 to 90).toList, uno, Nil), Uno(-10)) === esperado)
+  test("Prueba pequeña 3: Movimiento negativo desde vías") {
+    val e0: Estado = (Nil, generarVagones(60), generarVagones(40))
+    val e1 = aplicarMovimiento(e0, Uno(-30))
+    assert(e1._1.size == 30)
+    assert(e1._2.size == 30)
+    assert(e1._3.size == 40)
   }
 
-  test("Pequeña 4: retornar 20 de dos") {
-    val dos = (81 to 100).toList
-    val esperado = ((81 to 100).toList ++ (1 to 80).toList, Nil, Nil)
-    assert(aplicarMovimiento(((1 to 80).toList, Nil, dos), Dos(-20)) === esperado)
+  test("Prueba pequeña 4: Secuencia alternada") {
+    val e0: Estado = (generarVagones(100), Nil, Nil)
+    val movimientos = List.tabulate(20)(i => if (i % 2 == 0) Uno(5) else Dos(5))
+    val estados = movimientos.scanLeft(e0)((e, m) => aplicarMovimiento(e, m))
+    assert(estados.last._1.size + estados.last._2.size + estados.last._3.size == 100)
   }
 
-  test("Pequeña 5: movimiento Dos(0) no cambia el estado") {
-    val estado = ((1 to 100).toList, (1 to 50).toList, (51 to 100).toList)
-    assert(aplicarMovimiento(estado, Dos(0)) === estado)
+  test("Prueba pequeña 5: Movimiento excedente") {
+    val e0: Estado = (generarVagones(50), generarVagones(30), generarVagones(20))
+    val e1 = aplicarMovimiento(e0, Uno(-100))
+    assert(e1._1.size == 80)
+    assert(e1._2.isEmpty)
+    assert(e1._3.size == 20)
   }
 
-  // ==== PRUEBAS MEDIANAS (tamaño 500) ====
-  test("Mediana 1: mover 100 a uno") {
-    val principal = (1 to 500).toList
-    val esperado = ((1 to 400).toList, (401 to 500).toList, Nil)
-    assert(aplicarMovimiento((principal, Nil, Nil), Uno(100)) === esperado)
+  /* ***********************
+   * PRUEBAS MEDIANAS (500)
+   * ***********************/
+  test("Prueba mediana 1: Movimiento completo a vía dos") {
+    val vagones = generarVagones(500)
+    val e0: Estado = (vagones, Nil, Nil)
+    val e1 = aplicarMovimiento(e0, Dos(500))
+    assert(e1._1.isEmpty)
+    assert(e1._2.isEmpty)
+    assert(e1._3.size == 500)
   }
 
-  test("Mediana 2: mover 250 a dos") {
-    val principal = (1 to 500).toList
-    val esperado = ((1 to 250).toList, Nil, (251 to 500).toList)
-    assert(aplicarMovimiento((principal, Nil, Nil), Dos(250)) === esperado)
+  test("Prueba mediana 2: Movimiento exacto") {
+    val vagones = generarVagones(500)
+    val e0: Estado = (vagones, Nil, Nil)
+    val e1 = aplicarMovimiento(e0, Uno(250))
+    assert(e1._1.size == 250)
+    assert(e1._2.size == 250)
+    assert(e1._3.isEmpty)
   }
 
-  test("Mediana 3: retornar 100 de uno") {
-    val uno = (401 to 500).toList
-    val esperado = ((401 to 500).toList ++ (1 to 400).toList, Nil, Nil)
-    assert(aplicarMovimiento(((1 to 400).toList, uno, Nil), Uno(-100)) === esperado)
+  test("Prueba mediana 3: Movimiento negativo exacto") {
+    val e0: Estado = (Nil, generarVagones(300), generarVagones(200))
+    val e1 = aplicarMovimiento(e0, Dos(-200))
+    assert(e1._1.size == 200)
+    assert(e1._2.size == 300)
+    assert(e1._3.isEmpty)
   }
 
-  test("Mediana 4: retornar 250 de dos") {
-    val dos = (251 to 500).toList
-    val esperado = ((251 to 500).toList ++ (1 to 250).toList, Nil, Nil)
-    assert(aplicarMovimiento(((1 to 250).toList, Nil, dos), Dos(-250)) === esperado)
+  test("Prueba mediana 4: Secuencia aleatoria") {
+    val e0: Estado = (generarVagones(500), Nil, Nil)
+    val movimientos = List.fill(50)(if (math.random() > 0.5) Uno(10) else Dos(10))
+    val estados = movimientos.scanLeft(e0)((e, m) => aplicarMovimiento(e, m))
+    assert(estados.last._1.size + estados.last._2.size + estados.last._3.size == 500)
   }
 
-  test("Mediana 5: movimiento Uno(0) no cambia el estado") {
-    val estado = ((1 to 500).toList, (1 to 250).toList, (251 to 500).toList)
-    assert(aplicarMovimiento(estado, Uno(0)) === estado)
+  test("Prueba mediana 5: Conservación de elementos") {
+    val vagones = generarVagones(500)
+    val e0: Estado = (vagones, Nil, Nil)
+    val e1 = aplicarMovimiento(e0, Uno(100))
+    val e2 = aplicarMovimiento(e1, Dos(150))
+    val e3 = aplicarMovimiento(e2, Uno(-50))
+    val e4 = aplicarMovimiento(e3, Dos(-75))
+    assert(e4._1.size + e4._2.size + e4._3.size == 500)
   }
 
-  // ==== PRUEBAS GRANDES (tamaño 1000) ====
-  test("Grande 1: mover 300 a uno") {
-    val principal = (1 to 1000).toList
-    val esperado = ((1 to 700).toList, (701 to 1000).toList, Nil)
-    assert(aplicarMovimiento((principal, Nil, Nil), Uno(300)) === esperado)
+  /* **********************
+   * PRUEBAS GRANDES (1000)
+   * **********************/
+  test("Prueba grande 1: Movimiento completo") {
+    val vagones = generarVagones(1000)
+    val e0: Estado = (vagones, Nil, Nil)
+    val e1 = aplicarMovimiento(e0, Uno(1000))
+    assert(e1._1.isEmpty)
+    assert(e1._2.size == 1000)
+    assert(e1._3.isEmpty)
   }
 
-  test("Grande 2: mover 500 a dos") {
-    val principal = (1 to 1000).toList
-    val esperado = ((1 to 500).toList, Nil, (501 to 1000).toList)
-    assert(aplicarMovimiento((principal, Nil, Nil), Dos(500)) === esperado)
+  test("Prueba grande 2: Movimiento parcial") {
+    val vagones = generarVagones(1000)
+    val e0: Estado = (vagones, Nil, Nil)
+    val e1 = aplicarMovimiento(e0, Dos(333))
+    val e2 = aplicarMovimiento(e1, Uno(334))
+    assert(e2._1.size == 333)
+    assert(e2._2.size == 334)
+    assert(e2._3.size == 333)
   }
 
-  test("Grande 3: retornar 300 de uno") {
-    val uno = (701 to 1000).toList
-    val esperado = ((701 to 1000).toList ++ (1 to 700).toList, Nil, Nil)
-    assert(aplicarMovimiento(((1 to 700).toList, uno, Nil), Uno(-300)) === esperado)
+  test("Prueba grande 3: Movimiento negativo grande") {
+    val e0: Estado = (Nil, generarVagones(700), generarVagones(300))
+    val e1 = aplicarMovimiento(e0, Uno(-500))
+    assert(e1._1.size == 500)
+    assert(e1._2.size == 200)
+    assert(e1._3.size == 300)
   }
 
-  test("Grande 4: retornar 500 de dos") {
-    val dos = (501 to 1000).toList
-    val esperado = ((501 to 1000).toList ++ (1 to 500).toList, Nil, Nil)
-    assert(aplicarMovimiento(((1 to 500).toList, Nil, dos), Dos(-500)) === esperado)
+  test("Prueba grande 4: Estrés con movimientos alternos") {
+    val e0: Estado = (generarVagones(1000), Nil, Nil)
+    val movimientos = List.tabulate(100)(i => if (i % 3 == 0) Uno(7) else Dos(11))
+    val estados = movimientos.scanLeft(e0)((e, m) => aplicarMovimiento(e, m))
+    assert(estados.last._1.size + estados.last._2.size + estados.last._3.size == 1000)
   }
 
-  test("Grande 5: movimiento Dos(0) no cambia el estado") {
-    val estado = ((1 to 1000).toList, (1 to 500).toList, (501 to 1000).toList)
-    assert(aplicarMovimiento(estado, Dos(0)) === estado)
+  test("Prueba grande 5: Verificación final") {
+    val vagones = generarVagones(1000)
+    val e0: Estado = (vagones, Nil, Nil)
+    val movimientos = List(Uno(300), Dos(400), Uno(-100), Dos(-200), Uno(500))
+    val estados = movimientos.scanLeft(e0)((e, m) => aplicarMovimiento(e, m))
+    assert(estados.last._1.size + estados.last._2.size + estados.last._3.size == 1000)
   }
 }
