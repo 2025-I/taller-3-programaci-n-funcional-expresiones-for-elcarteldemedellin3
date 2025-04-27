@@ -12,40 +12,49 @@ class definirManiobras {
   case class Uno(n: Int) extends Movimiento
   case class Dos(n: Int) extends Movimiento
 
-  def aplicarMovimiento(e: Estado, m: Movimiento): Estado = m match {
-    case Uno(n) if n > 0 =>
-      val (principal, uno, dos) = e
-      val (movidos, restantes) = principal.splitAt(n.min(principal.length))
-      (restantes, uno ++ movidos, dos)
-    case Uno(n) if n < 0 =>
-      val (principal, uno, dos) = e
-      val (movidos, restantes) = uno.splitAt((-n).min(uno.length))
-      (principal ++ movidos, restantes, dos)
-    case Dos(n) if n > 0 =>
-      val (principal, uno, dos) = e
-      val (movidos, restantes) = principal.splitAt(n.min(principal.length))
-      (restantes, uno, dos ++ movidos)
-    case Dos(n) if n < 0 =>
-      val (principal, uno, dos) = e
-      val (movidos, restantes) = dos.splitAt((-n).min(dos.length))
-      (principal ++ movidos, uno, restantes)
-    case _ => e
+  def aplicarMovimiento(e: Estado, m: Movimiento): Estado = {
+    val (principal, uno, dos) = e
+    m match {
+      case Uno(n) if n > 0 =>
+        val (movidos, restantes) = principal.splitAt(n min principal.length)
+        (restantes, uno ++ movidos, dos)
+      case Uno(n) if n < 0 =>
+        val (movidos, restantes) = uno.splitAt((-n) min uno.length)
+        (principal ++ movidos, restantes, dos)
+      case Dos(n) if n > 0 =>
+        val (movidos, restantes) = principal.splitAt(n min principal.length)
+        (restantes, uno, dos ++ movidos)
+      case Dos(n) if n < 0 =>
+        val (movidos, restantes) = dos.splitAt((-n) min dos.length)
+        (principal ++ movidos, uno, restantes)
+      case _ => e
+    }
   }
 
   def definirManiobra(t1: Tren, t2: Tren): Maniobra = {
     @tailrec
-    def definirManiobraAux(estado: Estado, movimientos: Maniobra): Maniobra = {
+    def loop(estado: Estado, movimientos: Maniobra): Maniobra = {
       val (principal, uno, dos) = estado
 
       if (principal == t2) movimientos
-      else if (principal.nonEmpty) {
-        definirManiobraAux(aplicarMovimiento(estado, Uno(1)), movimientos :+ Uno(1))
-      } else if (uno.nonEmpty) {
-        definirManiobraAux(aplicarMovimiento(estado, Dos(1)), movimientos :+ Dos(1))
-      } else if (dos.nonEmpty) {
-        definirManiobraAux(aplicarMovimiento(estado, Dos(-1)), movimientos :+ Dos(-1))
-      } else movimientos
+      else {
+        val opciones = for {
+          mov <- List(
+            if (principal.nonEmpty) Some(Uno(1)) else None,
+            if (principal.isEmpty && uno.nonEmpty) Some(Dos(1)) else None,
+            if (principal.isEmpty && uno.isEmpty && dos.nonEmpty) Some(Dos(-1)) else None
+          )
+          movimiento <- mov
+        } yield movimiento
+
+        opciones.headOption match {
+          case Some(movimiento) =>
+            loop(aplicarMovimiento(estado, movimiento), movimientos :+ movimiento)
+          case None => movimientos
+        }
+      }
     }
-    definirManiobraAux((t1, Nil, Nil), Nil)
+
+    loop((t1, Nil, Nil), Nil)
   }
 }
