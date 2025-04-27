@@ -10,7 +10,7 @@ class definirManiobrasTest extends AnyFunSuite {
 
   val objdefinirManiobras = new definirManiobras()
 
-  /*test("Revertir tren de 10 vagones devuelve la maniobra esperada") {
+  test("Revertir tren de 10 vagones devuelve la maniobra esperada") {
     // Arrange
     val t1 = List('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j')
     val t2 = List('j', 'i', 'h', 'g', 'f', 'e', 'd', 'c', 'b', 'a')
@@ -59,5 +59,5 @@ class definirManiobrasTest extends AnyFunSuite {
     val expected = List() // No se requiere movimiento
     val result = objdefinirManiobras.definirManiobra(t1, t2)
     assert(result == expected)
-  }*/
+  }
 }
