@@ -20,41 +20,41 @@ class definirManiobras {
         (restantes, uno ++ movidos, dos)
       case Uno(n) if n < 0 =>
         val (movidos, restantes) = uno.splitAt((-n) min uno.length)
-        (principal ++ movidos, restantes, dos)
+        (movidos ++ principal, restantes, dos)
       case Dos(n) if n > 0 =>
         val (movidos, restantes) = principal.splitAt(n min principal.length)
         (restantes, uno, dos ++ movidos)
       case Dos(n) if n < 0 =>
         val (movidos, restantes) = dos.splitAt((-n) min dos.length)
-        (principal ++ movidos, uno, restantes)
+        (movidos ++ principal, uno, restantes)
       case _ => e
     }
   }
 
   def definirManiobra(t1: Tren, t2: Tren): Maniobra = {
     @tailrec
-    def loop(estado: Estado, movimientos: Maniobra): Maniobra = {
-      val (principal, uno, dos) = estado
+    def loop(estado: Estado, objetivo: Tren, acc: Maniobra): Maniobra = {
+      objetivo match {
+        case Nil => acc.reverse
+        case cabeza :: resto =>
+          val (principal, uno, dos) = estado
 
-      if (principal == t2) movimientos
-      else {
-        val opciones = for {
-          mov <- List(
-            if (principal.nonEmpty) Some(Uno(1)) else None,
-            if (principal.isEmpty && uno.nonEmpty) Some(Dos(1)) else None,
-            if (principal.isEmpty && uno.isEmpty && dos.nonEmpty) Some(Dos(-1)) else None
-          )
-          movimiento <- mov
-        } yield movimiento
+          val indiceOpt = (for {
+            (v, idx) <- principal.zipWithIndex
+            if v == cabeza
+          } yield idx).headOption
 
-        opciones.headOption match {
-          case Some(movimiento) =>
-            loop(aplicarMovimiento(estado, movimiento), movimientos :+ movimiento)
-          case None => movimientos
-        }
+          indiceOpt match {
+            case Some(idx) =>
+              val movs =
+                (if (idx > 0) List(Uno(idx), Uno(-idx)) else Nil) ::: List(Dos(1), Dos(-1))
+              val nuevoEstado = movs.foldLeft(estado)(aplicarMovimiento)
+              loop(nuevoEstado, resto, movs.reverse ::: acc)
+            case None =>
+              acc.reverse
+          }
       }
     }
-
-    loop((t1, Nil, Nil), Nil)
+    loop((t1, Nil, Nil), t2, Nil)
   }
 }
